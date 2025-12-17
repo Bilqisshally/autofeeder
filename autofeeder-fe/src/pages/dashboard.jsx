@@ -1,6 +1,14 @@
 import { Clock, AlertTriangle } from "lucide-react";
+import { useUser } from "../contexts/user";
+import Opening from "./opening";
 
 export default function Dashboard() {
+  const { user, token } = useUser();
+
+  if (!user || !token) {
+    return <Opening />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="ml-64 pt-20 px-6 lg:px-10">
