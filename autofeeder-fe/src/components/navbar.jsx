@@ -1,23 +1,19 @@
 import { ChevronDown, Edit2, LogOut, Settings, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../contexts/user";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deviceName, setDeviceName] = useState("Feeder Utama");
-  const [user, setUser] = useState(null);
+  const { user, logout } = useUser();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-  }, []);
-
   const handleLogout = () => {
-    localStorage.clear();
+    logout();
     setOpen(false);
-    navigate("/login"); // ← perbaikan: pakai navigate agar SPA tidak reload
+    navigate("/login");
   };
 
   if (!user) {
@@ -57,9 +53,15 @@ export default function Navbar() {
               autoFocus
             />
           ) : (
-            <span className="font-medium text-gray-700 max-w-[180px] truncate">{deviceName}</span>
+            <span className="font-medium text-gray-700 max-w-[180px] truncate">
+              {deviceName}
+            </span>
           )}
-          <ChevronDown className={`h-4 w-4 text-gray-500 transition ${open ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`h-4 w-4 text-gray-500 transition ${
+              open ? "rotate-180" : ""
+            }`}
+          />
         </button>
 
         {open && (
@@ -70,7 +72,10 @@ export default function Navbar() {
                   <p className="text-sm text-gray-500">Nama Perangkat</p>
                   <p className="font-bold text-lg">{deviceName}</p>
                 </div>
-                <button onClick={() => setEditing(true)} className="p-2 hover:bg-gray-100 rounded-lg transition">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
                   <Edit2 className="h-4 w-4 text-gray-600" />
                 </button>
               </div>
@@ -79,7 +84,9 @@ export default function Navbar() {
 
             <div className="px-5 py-3 border-b border-gray-100">
               <p className="text-xs text-gray-500">Akun terhubung</p>
-              <p className="font-semibold text-gray-800">{user.name || user.phone}</p>
+              <p className="font-semibold text-gray-800">
+                {user.name || user.phone}
+              </p>
               <p className="text-xs text-gray-400">{user.phone}</p>
             </div>
 

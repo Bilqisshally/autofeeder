@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "../contexts/user";
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const { save } = useUser();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -19,12 +21,11 @@ export default function SignIn() {
         }),
       });
 
-      const data = await res.text();
+      const data = await res.json();
 
       if (data.success) {
-        // Simpan token & user data
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // Simpan token & user data menggunakan context
+        save(data.user, data.token);
 
         // Redirect ke dashboard
         navigate("/");
@@ -43,11 +44,15 @@ export default function SignIn() {
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700">
       <main className="ml-0 md:ml-64 min-h-screen flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md rounded-3xl bg-white px-12 py-16 shadow-2xl mt-8 md:mt-12">
-          <h1 className="mb-8 text-center text-4xl font-black text-blue-600">Masuk</h1>
+          <h1 className="mb-8 text-center text-4xl font-black text-blue-600">
+            Masuk
+          </h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div>
-              <label className="font-semibold text-gray-700">Email / Nomor Telepon</label>
+              <label className="font-semibold text-gray-700">
+                Email / Nomor Telepon
+              </label>
               <input
                 required
                 className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:outline-none transition"
@@ -76,7 +81,10 @@ export default function SignIn() {
 
           <p className="text-center mt-8 text-gray-600">
             Belum punya akun?{" "}
-            <Link to="/signup" className="text-blue-600 font-bold hover:underline">
+            <Link
+              to="/signup"
+              className="text-blue-600 font-bold hover:underline"
+            >
               Daftar
             </Link>
           </p>
