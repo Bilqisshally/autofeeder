@@ -1,93 +1,80 @@
-import { Utensils, Clock, Plus } from "lucide-react";
+import { Calendar, Clock, Play, Plus } from "lucide-react";
+import { useState } from "react";
 
 export default function FeedingControl() {
-  const schedules = [
-    { id: 1, name: "Jadwal Pagi", time: "09:00", amount: "0.5 g", repeat: "Setiap hari" },
-    { id: 2, name: "Jadwal Siang", time: "12:00", amount: "0.5 g", repeat: "Setiap hari" },
-    { id: 3, name: "Jadwal Sore", time: "18:00", amount: "0.7 g", repeat: "Senin-Jumat" },
-  ];
+  const [schedules] = useState([
+    { name: "Pagi", time: "06:00", amount: "0.5g", repeat: "Harian" },
+    { name: "Siang", time: "12:00", amount: "0.5g", repeat: "Harian" },
+    { name: "Sore", time: "17:00", amount: "0.5g", repeat: "Harian" }
+  ]);
+  
+  const [lastFeed] = useState({
+    last_feed: "17:00",
+    last_amount: "0.5g"
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="ml-64 pt-20 px-6 lg:px-10">
-        <div className="max-w-7xl mx-auto py-8">
+    <div className="min-h-screen bg-white">
+      <main className="ml-64 pt-28 px-10 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
 
-          {/* Judul */}
-          <div className="mb-10">
-            <h1 className="text-4xl font-black text-gray-800 flex items-center gap-4">
-              <Utensils className="w-12 h-12 text-blue-600" />
-              Kontrol Pakan
-            </h1>
-            <p className="text-gray-600 mt-2">Atur pemberian pakan manual atau otomatis</p>
-          </div>
+          {/* KONTROL MANUAL - Tombol di Tengah */}
+          <div className="bg-[#E3F2FD] rounded-[40px] p-10 shadow-sm flex flex-col">
+            <div className="flex items-center gap-3 mb-4">
+              <Play className="text-blue-600 fill-current w-6 h-6" />
+              <h2 className="font-bold text-xl text-slate-800">Kontrol Manual</h2>
+            </div>
 
-          {/* GRID */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-
-            {/* CARD 1: Kontrol Manual */}
-            <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center justify-center text-center min-h-[400px]">
-              <h2 className="text-3xl font-bold text-gray-800 mb-8">Kontrol Manual</h2>
-
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-6 px-20 rounded-full shadow-md transition-all transform hover:scale-105 active:scale-95">
+            {/* Kontainer Flex Grow untuk memastikan tombol benar-benar di tengah secara vertikal dan horizontal */}
+            <div className="flex-grow flex flex-col items-center justify-center">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-14 py-4 rounded-2xl font-bold shadow-xl shadow-blue-200 transition-all active:scale-95 text-xl mb-8">
                 Feed Now
               </button>
-
-              <div className="mt-8 flex items-center gap-2 text-gray-600">
-                <Clock className="w-5 h-5" />
-                <p className="text-sm">
-                  Terakhir:{" "}
-                  <span className="text-blue-600 font-semibold">09:00</span> • 0.5 g
-                </p>
+              
+              <div className="flex items-center gap-2 text-xs text-slate-500 italic">
+                <Clock className="w-4 h-4" />
+                <span>Pemberian pakan terakhir: {lastFeed.last_feed}, {lastFeed.last_amount}</span>
               </div>
             </div>
-
-            {/* CARD 2: Jadwal Otomatis */}
-            <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Jadwal Otomatis</h2>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
-                  <Plus className="w-5 h-5" />
-                  Tambah Jadwal
-                </button>
-              </div>
-
-              <div className="space-y-3 flex-1 overflow-y-auto max-h-80">
-                {schedules.map((schedule) => (
-                  <div
-                    key={schedule.id}
-                    className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100 hover:border-blue-300 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-base text-gray-800">
-                          {schedule.name}
-                        </h3>
-                        <div className="flex items-center gap-4 mt-1 text-gray-600 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                            <span>{schedule.time}</span>
-                          </div>
-                          <span>•</span>
-                          <span>{schedule.amount}</span>
-                          <span>•</span>
-                          <span className="text-blue-600">{schedule.repeat}</span>
-                        </div>
-                      </div>
-
-                      <button className="text-gray-400 hover:text-gray-600 transition">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none">
-                          <circle cx="12" cy="5" r="1" />
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="12" cy="19" r="1" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
+
+          {/* JADWAL FEEDING - Header Biru Tegas */}
+          <div className="bg-[#E3F2FD] rounded-[40px] p-10 shadow-sm flex flex-col">
+            <div className="flex items-center gap-3 mb-10">
+              <Calendar className="text-blue-600 w-6 h-6" />
+              <h2 className="font-bold text-xl text-slate-800">Pengaturan Jadwal Feeding</h2>
+            </div>
+
+            <div className="overflow-hidden rounded-xl bg-white shadow-sm mb-6">
+              <table className="w-full text-xs border-collapse">
+                {/* Header Biru Solid (Tanpa Blur/Transparan) */}
+                <thead className="bg-[#82B1FF] text-slate-900 uppercase tracking-wider font-black">
+                  <tr>
+                    <th className="p-4 text-left border-b border-blue-200">Jadwal</th>
+                    <th className="p-4 text-left border-b border-blue-200">Waktu</th>
+                    <th className="p-4 text-left border-b border-blue-200">Jumlah</th>
+                    <th className="p-4 text-left border-b border-blue-200">Repeat</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-700 font-medium bg-white">
+                  {schedules.map((s, i) => (
+                    <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-blue-50/50 transition-colors">
+                      <td className="p-4">{s.name}</td>
+                      <td className="p-4">{s.time}</td>
+                      <td className="p-4">{s.amount}</td>
+                      <td className="p-4">{s.repeat}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:translate-x-1 transition-transform mt-auto">
+              <Plus className="w-5 h-5" />
+              Tambah Jadwal
+            </button>
+          </div>
+
         </div>
       </main>
     </div>

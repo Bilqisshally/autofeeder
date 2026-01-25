@@ -9,42 +9,32 @@ export default function SignUp() {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.target);
-    const dataInput = Object.fromEntries(formData);
-
     try {
       const res = await fetch("http://127.0.0.1:8000/api/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json", // <--- WAJIB: Supaya Laravel ngasih error JSON, bukan HTML
+          "Accept": "application/json",
         },
-        body: JSON.stringify(dataInput),
+        body: JSON.stringify({
+          name: e.target.name.value,
+          phone: e.target.phone.value,
+          password: e.target.password.value,
+          password_confirmation: e.target.password_confirmation.value,
+        }),
       });
 
-      // Cek response JSON-nya dulu
       const data = await res.json();
 
-      // Jika status tidak OK (misal 422 Validasi Error atau 500 Server Error)
-      if (!res.ok) {
-        // Gabungkan pesan error jika Laravel mengirim format array 'errors'
-        const errorMessage = data.errors
-          ? Object.values(data.errors).flat().join("\n")
-          : data.message || "Terjadi kesalahan saat mendaftar";
-        
-        throw new Error(errorMessage);
-      }
-
-      // Jika Sukses (success: true)
       if (data.success) {
-        alert("Pendaftaran berhasil! Silakan login.");
+        alert("Akun berhasil dibuat, silakan login");
         navigate("/login");
+      } else {
+        alert(data.message || "Signup gagal");
       }
-      
     } catch (err) {
-      // Tampilkan alert error ke user
-      alert(err.message);
-      console.error("Signup Error:", err);
+      alert("Terjadi kesalahan");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -52,72 +42,55 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700">
-      <main className="ml-0 md:ml-64 min-h-screen flex items-center justify-center px-4 py-12">
-        {/* Card daftar */}
-        <div className="w-full max-w-md rounded-3xl bg-white px-12 py-16 shadow-2xl mt-8 md:mt-12">
-          <h1 className="mb-8 text-center text-4xl font-black text-blue-600">
+      <main className="min-h-screen flex items-center justify-center px-4 md:ml-64 pt-16">
+        <div className="w-full max-w-lg bg-white p-10 rounded-3xl shadow-2xl">
+          <h1 className="text-3xl font-black text-center text-blue-600 mb-8">
             Daftar
           </h1>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div>
-              <label className="font-semibold text-gray-700">Nama Lengkap</label>
-              <input
-                name="name" // WAJIB ADA
-                required
-                className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:outline-none transition"
-                placeholder="Nama kamu"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <input
+              name="name"
+              placeholder="Nama"
+              required
+              className="p-3 border rounded-xl"
+            />
 
-            <div>
-              <label className="font-semibold text-gray-700">Nomor Telepon</label>
-              <input
-                name="phone" // WAJIB ADA
-                required
-                className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:outline-none transition"
-                placeholder="0812345678"
-              />
-            </div>
+            <input
+              name="phone"
+              placeholder="Nomor HP"
+              required
+              className="p-3 border rounded-xl"
+            />
 
-            <div>
-              <label className="font-semibold text-gray-700">Kata Sandi</label>
-              <input
-                name="password" // WAJIB ADA
-                required
-                type="password"
-                className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:outline-none transition"
-                placeholder="buat password kuat"
-              />
-            </div>
+            <input
+              name="password"
+              type="password"
+              placeholder="Password"
+              required
+              className="p-3 border rounded-xl"
+            />
 
-            <div>
-              <label className="font-semibold text-gray-700">Konfirmasi Kata Sandi</label>
-              <input
-                name="password_confirmation" // WAJIB ADA
-                required
-                type="password"
-                className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:outline-none transition"
-                placeholder="ulangi password"
-              />
-            </div>
+            {/* INI YANG WAJIB UNTUK RULE `confirmed` */}
+            <input
+              name="password_confirmation"
+              type="password"
+              placeholder="Konfirmasi Password"
+              required
+              className="p-3 border rounded-xl"
+            />
 
-            {/* Gradient button */}
             <button
-              type="submit"
               disabled={loading}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3.5 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-cyan-600 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-600 text-white py-3 rounded-xl font-bold disabled:opacity-70"
             >
-              {loading ? "Mendaftar..." : "Daftar"}
+              {loading ? "Memproses..." : "Daftar"}
             </button>
           </form>
 
-          <p className="text-center mt-8 text-gray-600">
+          <p className="text-center mt-6">
             Sudah punya akun?{" "}
-            <Link
-              to="/login"
-              className="text-blue-600 font-bold hover:underline"
-            >
+            <Link to="/login" className="text-blue-600 font-bold hover:underline">
               Masuk
             </Link>
           </p>

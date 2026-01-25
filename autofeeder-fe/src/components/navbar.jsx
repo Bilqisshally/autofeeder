@@ -90,11 +90,6 @@ export default function Navbar() {
               <p className="text-xs text-gray-400">{user.phone}</p>
             </div>
 
-            <button className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition">
-              <Settings className="h-5 w-5 text-gray-600" />
-              <span>Pengaturan Perangkat</span>
-            </button>
-
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-5 py-3 hover:bg-red-50 text-red-600 font-medium transition"

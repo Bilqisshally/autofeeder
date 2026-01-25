@@ -1,122 +1,167 @@
-import { Clock, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useUser } from "../contexts/user";
 import Opening from "./opening";
 
 export default function Dashboard() {
   const { user, token } = useUser();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [feeding, setFeeding] = useState(false);
 
-  if (!user || !token) {
-    return <Opening />;
-  }
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchDashboard() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/dashboard", {
+          signal: controller.signal,
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Fetch error:", err);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (user && token) fetchDashboard();
+
+    return () => controller.abort();
+  }, [user, token]);
+
+  const feedNow = async () => {
+    if (!data?.feeder_id) return alert("Feeder tidak tersedia");
+
+    setFeeding(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/feeding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          feeder_id: data.feeder_id,
+          amount: 50, // default manual feed amount
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.error(error);
+        alert("Gagal melakukan feed");
+      } else {
+        alert("Feed berhasil!");
+        // refresh dashboard
+        const refreshed = await fetch("http://127.0.0.1:8000/api/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await refreshed.json();
+        setData(json);
+      }
+    } catch (err) {
+      console.error("Feed error:", err);
+      alert("Terjadi kesalahan saat feed");
+    } finally {
+      setFeeding(false);
+    }
+  };
+
+  if (!user || !token) return <Opening />;
+  if (loading) return <div className="mt-20 text-center text-gray-500">Menghubungkan ke perangkat...</div>;
+  if (!data) return <div className="mt-20 text-center text-red-500">Gagal memuat informasi sistem.</div>;
+
+  const { feed_status = {}, feed_now = {}, servo_status = {}, feed_history = [] } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="ml-64 pt-20 px-6 lg:px-10">
-        <div className="max-w-4xl mx-auto py-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-auto">
+    <main className="ml-64 pt-20 px-10">
+      <div className="grid grid-cols-2 gap-6 max-w-4xl">
 
-            {/* CARD 1: Status Pakan */}
-            <div className="bg-white rounded-xl shadow-sm p-5 hover:shadow-xl transition-all flex flex-col justify-between">
-              <h3 className="text-xl font-bold text-gray-800 mb-6">Status Pakan</h3>
-              
-              <div className="flex justify-center mb-6">
-                <div className="relative w-40 h-40">
-                  <svg className="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" stroke="#e5e7eb" strokeWidth="16" fill="none" />
-                    <circle
-                      cx="80" cy="80" r="70"
-                      stroke="#10b981"
-                      strokeWidth="16"
-                      fill="none"
-                      strokeDasharray="439.82"
-                      strokeDashoffset="175.93"
-                      strokeLinecap="round"
-                      className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <span className="text-2xl font-black text-green-600">450 g</span>
-                      <p className="text-sm text-gray-500 mt-1">tersisa</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <p className="text-green-600 font-bold text-lg">Status: Aman</p>
-                <p className="text-sm text-gray-400 mt-2">Update: 12:00</p>
-              </div>
-            </div>
-
-            {/* CARD 2: Feeding Control */}
-            <div className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-xl transition-all flex flex-col justify-center items-center">
-              <h3 className="text-xl font-bold text-gray-800 mb-8">Kontrol Pakan</h3>
-              
-              <div className="flex justify-center my-10">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl px-14 py-7 rounded-full shadow-xl transition-all transform hover:scale-105 active:scale-95">
-                  Feed Now
-                </button>
-              </div>
-
-              <p className="text-center text-gray-600 text-lg">
-                Terakhir: 09:00 • 0.5 g
-              </p>
-            </div>
-
-            {/* CARD 3: Prediksi Pakan Harian */}
-            <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-lg transition-all flex flex-col justify-between">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Prediksi Pakan Harian</h3>
-
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 mb-5">
-                <p className="text-sm text-gray-600">Rata-rata harian</p>
-                <p className="text-3xl font-black text-gray-800">0.9 g</p>
-                <p className="text-green-700 font-bold">Pola makan normal</p>
-              </div>
-
-              {/* BAR CHART */}
-              <div className="flex items-end justify-center gap-4 h-28">
-                {[110, 80, 95, 85, 55, 65, 40].map((height, i) => (
-                  <div
-                    key={i}
-                    className="w-9 bg-gradient-to-t from-blue-600 to-blue-500 rounded-t-2xl shadow-md transition-all hover:from-blue-700"
-                    style={{ height: `${height * 1.1}px` }}
-                  />
-                ))}
-              </div>
-
-              {/* PAKAI AlertTriangle DARI LUCIDE */}
-              <button className="mt-6 w-full bg-amber-400 hover:bg-amber-500 text-amber-900 font-medium text-sm py-3 rounded-lg flex items-center justify-center gap-2 transition-all"> {/* dari text-lg py-5 rounded-xl */}
-                <AlertTriangle className="w-6 h-6" /> {/* dari w-8 h-8 */}
-                <span>Isi ulang dalam &lt; 2 hari</span>
-              </button>
-            </div>
-
-            {/* CARD 4: Time to Empty */}
-            <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-lg transition-all flex flex-col justify-center">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Time to Empty (TTE)</h3>
-
-              <div className="text-center py-6">
-                <Clock className="w-16 motion-safe:animate-pulse h-16 text-blue-600 mx-auto mb-4"/>
-                <p className="text-7xl font-black text-gray-800 leading-none">5</p>
-                <p className="text-2xl text-gray-600 mt-2">Hari Lagi</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3 text-sm mt-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Sisa Pakan</span>
-                  <span className="font-bold text-lg">2000 g</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Rata-rata</span>
-                  <span className="font-bold text-lg">400 g/hari</span>
-                </div>
-              </div>
-            </div>
-
+        {/* STATUS PAKAN */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="font-bold text-lg mb-4 text-gray-800">Status Pakan</h3>
+          <div className="text-center py-2">
+            <p className="text-4xl font-extrabold text-blue-600">
+              {feed_status.percentage ?? 0}%
+            </p>
+            <p className="text-sm text-gray-400 font-medium">Sisa Pakan dalam Wadah</p>
+          </div>
+          <div className="mt-4 flex justify-between text-sm text-gray-600 border-t pt-4">
+            <span>Berat: <strong>{feed_status.remaining ?? 0}g</strong></span>
+            <span className={feed_status.status === 'Low' ? 'text-red-500 font-bold' : 'text-green-500'}>
+              {feed_status.status ?? "-"}
+            </span>
           </div>
         </div>
-      </main>
-    </div>
+
+        {/* FEEDING CONTROL */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center flex flex-col justify-between">
+          <h3 className="font-bold text-lg text-gray-800">Kontrol Pakan</h3>
+          <div>
+            <button
+              disabled={feeding}
+              onClick={feedNow}
+              className={`bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 ${feeding ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {feeding ? 'Sedang memberi makan...' : 'Feed Now'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Terakhir: {feed_now.last_feed_time ?? "-"} • {feed_now.amount ?? 0}g
+          </p>
+        </div>
+
+        {/* STATUS SERVO */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="font-bold text-lg mb-4 text-gray-800 text-center">Mekanisme Servo</h3>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className={`w-3 h-3 rounded-full ${servo_status.condition === 'Normal' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+              <span className="font-bold text-gray-700">{servo_status.condition ?? "Unknown"}</span>
+            </div>
+            <span className="bg-blue-50 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+              {servo_status.state ?? "Standby"}
+            </span>
+          </div>
+          <p className="text-[10px] text-center text-gray-400 mt-6 italic">
+            Aktif terakhir: {servo_status.last_move ?? "-"}
+          </p>
+        </div>
+
+        {/* RIWAYAT PAKAN */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="font-bold text-lg mb-4 text-gray-800">Aktivitas Terakhir</h3>
+          <div className="overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-gray-400 border-b">
+                  <th className="pb-2 font-medium">Waktu</th>
+                  <th className="pb-2 font-medium text-center">Jenis</th>
+                  <th className="pb-2 font-medium text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {feed_history.length > 0 ? feed_history.map((item, i) => (
+                  <tr key={i} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
+                    <td className="py-2 text-gray-600">{item.time}</td>
+                    <td className="py-2 text-center text-gray-500">{item.type}</td>
+                    <td className={`py-2 text-right font-medium ${item.status === 'Success' ? 'text-green-500' : 'text-red-400'}`}>
+                      {item.status}
+                    </td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan="3" className="py-4 text-center text-gray-300">Belum ada aktivitas</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
   );
 }

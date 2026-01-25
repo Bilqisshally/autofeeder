@@ -28,7 +28,7 @@ export default function SignIn() {
         save(data.user, data.token);
 
         // Redirect ke dashboard
-        navigate("/");
+        navigate("/dashboard");
       } else {
         alert(data.message || "Login gagal");
       }

@@ -1,78 +1,53 @@
-import { BarChart3, TrendingUp } from "lucide-react";
-import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useEffect, useState } from "react";
 
 export default function Statistika() {
-  const [activeTab, setActiveTab] = useState("harian");
+  const [logs] = useState([
+    { date: "1 Des", count: 85, status: "ok" },
+    { date: "2 Des", count: 70, status: "ok" },
+    { date: "3 Des", count: 60, status: "ok" },
+    { date: "4 Des", count: 65, status: "ok" },
+    { date: "5 Des", count: 30, status: "error" },
+  ]);
 
-  const dailyData = [
-    { day: "Sen", amount: 2.8 },
-    { day: "Sel", amount: 1.9 },
-    { day: "Rab", amount: 2.4 },
-    { day: "Kam", amount: 2.1 },
-    { day: "Jum", amount: 3.2 },
-    { day: "Sab", amount: 2.9 },
-    { day: "Min", amount: 3.5 },
-  ];
-
-  const totalThisWeek = dailyData
-    .reduce((a, b) => a + b.amount, 0)
-    .toFixed(1);
+  const maxVal = Math.max(...logs.map(o => o.count), 1);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="ml-64 pt-20 px-6 lg:px-10">
-        <div className="max-w-6xl mx-auto py-6">
+    <div className="min-h-screen bg-white">
+      <main className="ml-64 pt-28 px-6 pb-12">
+        <div className="max-w-2xl mx-auto bg-[#E3F2FD] rounded-[40px] p-10 shadow-sm border border-blue-50">
+          <h2 className="text-xl font-bold text-center text-slate-800 mb-16">
+            Ringkasan Aktivitas Mekanisme Servo
+          </h2>
 
-          {/* PAGE TITLE */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-black text-gray-800 flex items-center gap-3">
-              <BarChart3 className="w-10 h-10 text-blue-600" />
-              Statistika Pemberian Pakan
-            </h1>
+          <div className="relative flex flex-col items-center">
+            <div className="flex items-end justify-center gap-6 h-64 w-full px-6">
+              {logs.map((item, i) => (
+                <div key={i} className="group relative flex flex-col items-center w-10">
+                  <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-2 py-1 rounded">
+                    {item.count}x
+                  </div>
+                  <div 
+                    className={`w-full rounded-t-md transition-all duration-700 ${
+                      item.status === 'error' ? 'bg-[#FF4D4D]' : 'bg-[#2ECC71]'
+                    }`}
+                    style={{ 
+                        height: `${(item.count / maxVal) * 100}%`,
+                        minHeight: '20px'
+                    }}
+                  />
+                  <span className="text-slate-500 text-xs mt-4 font-medium">{item.date}</span>
+                </div>
+              ))}
+            </div>
+            <div className="w-[90%] h-1.5 bg-[#333] rounded-full -mt-[1px]" />
           </div>
 
-          <div className="bg-white rounded-3xl shadow-xl p-6">
-
-            {/* HEADER */}
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">7 Hari Terakhir</h2>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-                <span className="text-xl font-bold text-green-600">+12%</span>
-                <span className="text-gray-600">vs minggu lalu</span>
-              </div>
-            </div>
-
-            {/* CHART */}
-            <div className="relative bg-gray-50 rounded-2xl p-5 border border-dashed border-gray-200">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dailyData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="amount" name="Pakan (g)" fill="#3b82f6" >
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* TOTAL SUMMARY */}
-            <div className="mt-6 text-center bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl py-6">
-              <p className="text-base text-gray-700">Total pakan minggu ini</p>
-              <p className="text-4xl font-black text-blue-600 mt-1">
-                {totalThisWeek} g
-              </p>
-
-              <p className="text-gray-600 mt-3 text-sm">
-                Tertinggi:{" "}
-                <span className="font-bold text-green-600">Minggu</span> • Kedua:{" "}
-                <span className="font-bold text-amber-600">Jumat</span>
-              </p>
-            </div>
-
+          <div className="mt-16 px-6">
+            <p className="text-slate-600 text-[12px] leading-relaxed text-center italic leading-6">
+              Grafik menunjukkan aktivitas mekanisme servo dalam beberapa hari terakhir. 
+              Secara umum, sistem bekerja stabil dengan mayoritas pakan berjalan normal 
+              dan hanya sedikit kejadian error yang terdeteksi.
+            </p>
           </div>
         </div>
       </main>
